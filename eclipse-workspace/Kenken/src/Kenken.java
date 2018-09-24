@@ -1,12 +1,11 @@
 import java.io.*;
 import java.util.*;
-/*PROBLEM: CHECK Why State 10 and 11 are happening in state 10 itself like given in the sample output states
- * Things to do: id-- check for >0 to stop underflowing in backtracking*/
+//PROBLEM WITH i=1,j=0:[] when backtracking. it is not updating the open list correctly
+/*Things to do: id-- check for >0 to stop underflowing in backtracking*/
 public class Kenken {
 	static int count = 0;
     public static class Puzzle{
 	    static int N;
-	    static String printedBoard;
 	    static long noOfStates;
 	    static int time;
 	    static float rate;
@@ -19,6 +18,7 @@ public class Kenken {
 	    static boolean[][] constants;
 	    static int[][] uniques;
 	    static int[][] computes;
+
 	    Puzzle(String puzzle)
 	    {
 	    	N = puzzle.charAt(0) - '0';
@@ -32,6 +32,7 @@ public class Kenken {
 		    uniques = new int[N][N];
 		    computes = new int[N][N];
 	    	
+	    	System.out.println("\nPuzzle No.: " + ++count + "\n\nN = " + N);
 	    	for(int i = 0; i< N; i++)
 	    		object.add(i+1);
 	    	
@@ -49,7 +50,7 @@ public class Kenken {
 	    	}
 	    	constraints = puzzle.substring(3);
 	    	constraint = constraints.split("\n");
-	    	//System.out.println("\nPuzzle created:\n"+ constraints);
+	    	System.out.println("\nPuzzle created:\n"+ constraints);
 	    	mapOperations();	
 	    }
 	    public static void printOpenLists()
@@ -68,14 +69,14 @@ public class Kenken {
 	    	for(int i = 0; i<N; i++)
     			for(int j=0; j<N;j++)
     				result[i][j] = mockSolution[i][j];
-	    	if(isSolved(false,-1)==0) 
+	    	if(isSolved(false)==0) 
     			solve0(debug);
 	    	else if(debug)
     			printBoard(1);
 	    }
 	    public void solve1(boolean debug)
 	    {
-	    	while(isSolved(false,-1)==0)
+	    	while(isSolved(false)==0)
 	    	{
 	    		noOfStates++;
 	    		boolean flag = false;
@@ -134,7 +135,7 @@ public class Kenken {
 	    				
 			    		if(checkUniquenessConstraint(ordering[0][id]+1,ordering[1][id]+1)==1)
 		    				{
-			    				flag = isPartlySolved(-1);
+			    				flag = isPartlySolved();
 			    				if(debug) System.out.println("flag = " + flag);
 		    				}
 		    			else
@@ -148,7 +149,7 @@ public class Kenken {
 			    			}
 			    			
 		    			if(id==N*N-1)
-		    				resultFlag = isSolved(debug,-1);	
+		    				resultFlag = isSolved(debug);	
 			    		//promptEnterKey();
     				}
 	    	}
@@ -200,14 +201,14 @@ public class Kenken {
 								updateOpenLists(ordering[0][id], ordering[1][id],result[ordering[0][id]][ordering[1][id]],oldValue);
 								if(checkUniquenessConstraint(ordering[0][id]+1,ordering[1][id]+1)==1)
 			    				{
-				    				flag = isPartlySolved(-1);
+				    				flag = isPartlySolved();
 				    				if(debug) System.out.println("flag = " + flag);
 			    				}
 								else
 									flag = 0;
 					    		noOfStates++;	
 					    		if(id==N*N-1)
-				    				resultFlag = isSolved(debug,-1);
+				    				resultFlag = isSolved(debug);
 					    		if(flag == 1 || openLists.get(ordering[0][id]*N+ordering[1][id]).size()<2) 
 					    		{
 					    			LinkedList<Integer> object1 = new LinkedList<Integer>();
@@ -238,14 +239,14 @@ public class Kenken {
 						updateOpenLists(ordering[0][id],ordering[1][id],result[ordering[0][id]][ordering[1][id]],oldValue);
 						if(checkUniquenessConstraint(ordering[0][id]+1,ordering[1][id]+1)==1)
 	    				{
-		    				flag = isPartlySolved(-1);
+		    				flag = isPartlySolved();
 		    				if(debug) System.out.println("flag = " + flag);
 	    				}
 						else
 							flag = 0;
 			    		noOfStates++;	
 			    		if(id==N*N-1)
-		    				resultFlag = isSolved(debug,-1);
+		    				resultFlag = isSolved(debug);
 			    		if(flag == 1) //openLists.get(ordering[0][id]*N+ordering[1][id]).size()<2)
 			    		{
 			    		   LinkedList<Integer> object = new LinkedList<Integer>();
@@ -326,7 +327,7 @@ public class Kenken {
 								updateOpenListsNew(ordering[0][id], ordering[1][id]);
 								if(checkUniquenessConstraint(ordering[0][id]+1,ordering[1][id]+1)==1)
 			    				{
-				    				flag = isPartlySolved(-1);
+				    				flag = isPartlySolved();
 				    				if(debug) System.out.println("Updated flag0 = " + flag);
 			    				}
 								else
@@ -338,7 +339,7 @@ public class Kenken {
 					    				resetUniqueValues(id);
 					    				fillUniqueValues(ordering[0][id],ordering[1][id],id);
 					    				openLists.set(ordering[0][id]*N+ordering[1][id],oldOpenList1);
-					    				flag = isPartlySolved(-1);
+					    				flag = isPartlySolved();
 					    				if(debug) System.out.println("Updated flag1 = " + flag);
 					    				if(flag == 1 || openLists.get(ordering[0][id]*N+ordering[1][id]).size()<2) 
 							    		{
@@ -353,7 +354,7 @@ public class Kenken {
 					    				}*/
 						    			
 					    			}
-					    		resultFlag = isSolved(false,-1);
+					    		resultFlag = isSolved(false);
 							}
 							else
 							{
@@ -384,7 +385,7 @@ public class Kenken {
 							openLists.set(ordering[0][id]*N+ordering[1][id], getOpenListNew(ordering[0][id], ordering[1][id], true)); //previous update would have deleted the open list of current element, so restore it.
 						if(checkUniquenessConstraint(ordering[0][id]+1,ordering[1][id]+1)==1)
 	    				{
-		    				flag = isPartlySolved(-1);
+		    				flag = isPartlySolved();
 		    				if(debug) System.out.println("Updated flag2 = " + flag);
 	    				}
 						else
@@ -396,7 +397,7 @@ public class Kenken {
 			    		   resetUniqueValues(id);
 		    			   fillUniqueValues(ordering[0][id],ordering[1][id],id);		    				   
 		    			   openLists.set(ordering[0][id]*N+ordering[1][id],oldOpenList1);
-		    			   flag = isPartlySolved(-1);
+		    			   flag = isPartlySolved();
 		    			   if(flag==1)
 		    				   {
 		    				   	LinkedList<Integer> object = new LinkedList<Integer>();
@@ -426,7 +427,7 @@ public class Kenken {
 			    	 		openLists.set(ordering[0][id]*N+ordering[1][id], object);
 			    	 		closedLists.set(ordering[0][id]*N+ordering[1][id], otherObject);
 			    		}
-			    		resultFlag = isSolved(false,-1);
+			    		resultFlag = isSolved(false);
 					}
 				}
 				else
@@ -435,11 +436,11 @@ public class Kenken {
 				  flag = 0;
 				  backtrack = true;
 				}	
-				if(debug) 
+				if(debug && noOfStates > 1267) 
 	    		{
 				  printBoard(resultFlag);
 				  printOpenLists();
-				  if(noOfStates < 0) promptEnterKey();
+				  if(noOfStates > 1284 && id==12) promptEnterKey();
 				}
 		    }   	
 	    }
@@ -499,7 +500,7 @@ public class Kenken {
 								if(checkUniquenessConstraint(ordering[0][id]+1,ordering[1][id]+1)==1)
 			    				{
 									oldOpenList = openLists.get(ordering[0][id]*N+ordering[1][id]);
-									flag = isPartlySolved(id);
+									flag = isPartlySolvedNew(id);
 									openLists.set(ordering[0][id]*N+ordering[1][id],oldOpenList);
 				    				if(debug) System.out.println("Updated flag0 = " + flag);
 			    				}
@@ -511,8 +512,8 @@ public class Kenken {
 					    				oldOpenList = openLists.get(ordering[0][id]*N+ordering[1][id]);
 					    				resetUniqueValues(id);
 					    				resetComputeValues(id);
-					    				fillUniqueValues(ordering[0][id],ordering[1][id],id);
-					    				flag = isPartlySolved(id);
+					    				fillUniqueValuesNew(ordering[0][id],ordering[1][id],id);
+					    				flag = isPartlySolvedNew(id);
 					    				openLists.set(ordering[0][id]*N+ordering[1][id],oldOpenList);
 					    				if(debug) System.out.println("Updated flag1 = " + flag);
 					    				if(flag == 1 || openLists.get(ordering[0][id]*N+ordering[1][id]).size()<2) 
@@ -522,7 +523,7 @@ public class Kenken {
 							    		}
 					    				if(flag == 1) backtrack = false;
 					    			}
-					    		resultFlag = isSolved(false,id);
+					    		resultFlag = isSolved(false);
 							}
 							else
 							{
@@ -557,7 +558,7 @@ public class Kenken {
 			    	    if(checkUniquenessConstraint(ordering[0][id]+1,ordering[1][id]+1)==1)
 	    				{
 							oldOpenList = openLists.get(ordering[0][id]*N+ordering[1][id]);
-		    				flag = isPartlySolved(id);
+		    				flag = isPartlySolvedNew(id);
 		    				openLists.set(ordering[0][id]*N+ordering[1][id],oldOpenList);
 		    				if(debug) System.out.println("Updated flag2 = " + flag);
 	    				}
@@ -569,10 +570,10 @@ public class Kenken {
 			    		   oldOpenList = openLists.get(ordering[0][id]*N+ordering[1][id]);
 			    		   resetUniqueValues(id);
 			    		   resetComputeValues(id);
-		    			   fillUniqueValues(ordering[0][id],ordering[1][id],id);		    				   
+		    			   fillUniqueValuesNew(ordering[0][id],ordering[1][id],id);		    				   
 		    			   openLists.set(ordering[0][id]*N+ordering[1][id],oldOpenList);
 		    			   oldOpenList = openLists.get(ordering[0][id]*N+ordering[1][id]);
-		    			   flag = isPartlySolved(id);
+		    			   flag = isPartlySolvedNew(id);
 		    			   openLists.set(ordering[0][id]*N+ordering[1][id],oldOpenList);
 		    			   
 		    			   if(flag==1)
@@ -605,7 +606,7 @@ public class Kenken {
 			    	 		openLists.set(ordering[0][id]*N+ordering[1][id], object);
 			    	 		closedLists.set(ordering[0][id]*N+ordering[1][id], otherObject);
 			    		}
-			    		resultFlag = isSolved(false,id);
+			    		resultFlag = isSolved(false);
 					}
 				}
 				else
@@ -618,7 +619,7 @@ public class Kenken {
 	    		{
 				  printBoard(resultFlag);
 				  printOpenLists();
-				  if(noOfStates > 9) promptEnterKey();
+				  if(noOfStates > 50) promptEnterKey();
 				}
 		    }   	
 	    }
@@ -634,7 +635,7 @@ public class Kenken {
 	    	else if (operation.equals("Multiply"))
 	    	{
 	    		for(int k = 1; k<=N; k++)
-	    			if(product(numbers)*k == operationResult) 
+	    			if(productNew(numbers)*k == operationResult) 
 	    			{
 	    				estimates.add(k);
 	    				break;
@@ -718,7 +719,7 @@ public class Kenken {
 	    				success = true;
 	    			}
 	        return success;
-	    }
+	    }	
 	    public static boolean resetComputeValues(int id)
 	    {
 	    	boolean success = false;
@@ -731,8 +732,28 @@ public class Kenken {
 	    				success = true;
 	    			}
 	        return success;
-	    }	
+	    }
 	    public static boolean fillUniqueValues(int y, int x, int id)
+	    {
+	    	boolean noUniqueValues = false, success=false;
+	    	while(!noUniqueValues)
+	    	{
+	    		noUniqueValues = true;
+	    		for(int i = 0; i< N; i++)
+	    			for(int j = 0; j< N; j++)
+	    			{	if(openLists.get(i*N+j).size()==1 && !(i==y && j==x)) //Don't fill the current id as unique value. That will be taken care outside this function
+	    				{
+	    					result[i][j] = openLists.get(i*N+j).get(0);
+	    					updateOpenListsNew(i,j);
+	    					noUniqueValues = false;
+	    					uniques[i][j] = id+1;
+	    					success = true;	
+	    				}
+	    			}
+	    	}
+	    	return success;
+	    }
+	    public static boolean fillUniqueValuesNew(int y, int x, int id)
 	    {
 	    	boolean noUniqueValues = false, success=false;
 	    	while(!noUniqueValues)
@@ -755,7 +776,7 @@ public class Kenken {
 	    	}
 	    	return success;
 	    }
-        public static int doBacktrack(int[][] ordering, int id) 
+	    public static int doBacktrack(int[][] ordering, int id) 
 	    {
 			  ArrayList<Integer> index = new ArrayList<Integer>();
 			  index.add(ordering[0][id]);
@@ -764,7 +785,7 @@ public class Kenken {
 				  {
 				  	result[ordering[0][id]][ordering[1][id]] = 0;
 				  	uniques[ordering[0][id]][ordering[1][id]]= 0;
-				    computes[ordering[0][id]][ordering[1][id]]= 0;
+				  	computes[ordering[0][id]][ordering[1][id]]= 0;
 				  	emptyClosedLists(ordering, id);
 				  	resetUniqueValues(id);
 				  	resetComputeValues(id);
@@ -833,7 +854,7 @@ public class Kenken {
 							   }
 				   }
 			   }
-			   return number;
+			    return number;
 		   }
 	   public static void updateOpenLists(int i, int j, int newValue, int oldValue)
 	   {
@@ -854,6 +875,12 @@ public class Kenken {
 	   }
 	   public static void updateOpenListsNew(int i, int j)
 	   {
+		   /*
+		   for(int k = 0; k<N; k++)
+		      openLists.set(i*N+k, getOpenListNew(i,k, false));
+		   for(int k = 0; k<N; k++)
+			  openLists.set(k*N+j, getOpenListNew(k,j, false));
+		   */
 		   for(int p = 0; p<N; p++)
 			 for(int q = 0; q<N; q++)
 				  openLists.set(p*N+q, getOpenListNew(p,q, false));
@@ -863,17 +890,17 @@ public class Kenken {
 		   for(int i = id; i<N*N; i++)
 		   {
 			LinkedList<Integer> otherObject = new LinkedList<Integer>();
-			closedLists.set(ordering[0][i]*N+ordering[1][i], otherObject); //closedLists.set(ordering[0][id]*N+ordering[1][id], otherObject);
+   			closedLists.set(ordering[0][i]*N+ordering[1][i], otherObject);
 		   }
 	   }
 	   public static LinkedList<Integer> getOpenListNew(int i, int j, boolean exception) //exception is during the backtracking
 	   {
 		   LinkedList<Integer> object = new LinkedList<Integer>();
 		   if(computes[i][j]==0)
-		   {
+		   {	   
 			   if(result[i][j]==0 || exception)
 			   {
-				   for(int k = 0; k<N; k++) if(!closedLists.get(i*N+j).contains(k+1)) object.add(k+1);
+				   for(int k = 0; k<N; k++) object.add(k+1);
 				   for(int k = 0; k<N; k++) if(result[i][k]!=0) object.remove(new Integer(result[i][k]));
 				   for(int k = 0; k<N; k++) if(result[k][j]!=0) object.remove(new Integer(result[k][j]));
 			   }
@@ -889,9 +916,17 @@ public class Kenken {
 	    {
 	        int result = 1;
 	        for (int i = 0; i < array.length; i++)
-	            if(array[i]!=0) result = result * array[i];
+	            result = result * array[i];
 	        return result;
 	    }
+	   public int productNew(int array[])
+	    {
+	        int result = 1;
+	        for (int i = 0; i < array.length; i++)
+	        	if(array[i]!=0) result = result * array[i];
+	        return result;
+	    }
+	   
 	   public void mapOperations()
 	    {	
 	    	int noOfConstraints = constraint.length;
@@ -905,7 +940,37 @@ public class Kenken {
 		    	}
 	    	}	
 	    }
-	   public int checkConstraint(String constraint, int id)
+	   public int checkConstraint(String constraint)
+	    {
+	    	int flag = 1;
+	    	String[] fields = constraint.split(" ");
+	    	int[] numbers = new int[fields.length-2];
+	    	String operation = fields[0].trim();
+	    	int operationResult = Integer.parseInt(fields[1]);
+	    	for(int k = 0; k < fields.length-2; k++)
+	    	{
+	    		int y = fields[k+2].charAt(0) - '0' - 1, x = fields[k+2].charAt(2)-'0' - 1; // Interchanged only in this place to account for swap in row-column convention
+	    		numbers[k] = result[y][x];
+	    	}
+	    	if(product(numbers)==0)
+	    		flag = 2;
+	    	else
+	    	{
+	    		if(operation.equals("Add"))
+		    		if(Arrays.stream(numbers).sum()!= operationResult) flag = 0;
+		    	if(operation.equals("Subtract"))
+		    		if(Math.abs(numbers[0]-numbers[1])!= operationResult) flag = 0;
+		    	if(operation.equals("Constant"))
+		    		if(numbers[0]!= operationResult) flag = 0;
+		    	if(operation.equals("Multiply"))
+		    		if(product(numbers)!= operationResult) flag = 0;
+		    	if(operation.equals("Divide"))
+		    		if(numbers[0]*operationResult!=numbers[1] && numbers[1]*operationResult!=numbers[0]) flag = 0;
+	    	}
+	    	
+	    	return flag;
+	    }
+	   public int checkConstraintNew(String constraint, int id)
 	    {
 	    	int flag = 1;
 	    	String[] fields = constraint.split(" ");
@@ -947,7 +1012,7 @@ public class Kenken {
 		    	if(operation.equals("Constant"))
 		    		if(numbers[0]!= operationResult) flag = 0;
 		    	if(operation.equals("Multiply"))
-		    		if(product(numbers)!= operationResult) flag = 0;
+		    		if(productNew(numbers)!= operationResult) flag = 0;
 		    	if(operation.equals("Divide"))
 		    		if(numbers[0]*operationResult!=numbers[1] && numbers[1]*operationResult!=numbers[0]) flag = 0;
 	    	}
@@ -1010,14 +1075,14 @@ public class Kenken {
 	    	}
 	    	return 1;
 	    }
-	   public int isSolved(boolean debugMode, int id)
+	   public int isSolved(boolean debugMode)
 	    {
 	    	int flag = 1;
 	    	if(debugMode)
 	    		System.out.println();
 	    	for(int i = 0; i < constraint.length; i++)
 	    	{
-	    		flag = checkConstraint(constraint[i].trim(),id);
+	    		flag = checkConstraint(constraint[i].trim());
 	    		if(debugMode)
 	    			System.out.print("Checking constraint: " + constraint[i].trim() + " - " + flag + "\n");
 	    		if(flag==0) break;
@@ -1030,7 +1095,7 @@ public class Kenken {
 	    		}
 	    	return flag;
 	    }
-	   public int isPartlySolved(int id)
+	   public int isPartlySolved()
 	    {
 	    	int resultFlag = 1;
 	    	int flag = -1; // 0 - unsolved, 1 - solved, 2 - cannot evaluate
@@ -1044,7 +1109,39 @@ public class Kenken {
 	    				if(prevOperation != operations[i][j]) //Don't check constraint for the same operation
 	    				{ 
 	    					prevOperation = operations[i][j];
-	    					if(checkConstraint(constraint[prevOperation],id)==0)
+	    					if(checkConstraint(constraint[prevOperation])==0)
+		    					{
+		    						resultFlag = 0;
+		    						break;
+		    					}
+	    				}
+	    			}
+	    			else
+	    				{
+	    					flag = 0;
+	    					break;
+	    				}
+	    		}
+	    		if(resultFlag==0 || flag==0)
+	    			break;
+	    	}	    	
+	    	return resultFlag;
+	    }
+	   public int isPartlySolvedNew(int id)
+	    {
+	    	int resultFlag = 1;
+	    	int flag = -1; // 0 - unsolved, 1 - solved, 2 - cannot evaluate
+	    	int prevOperation = -1;
+	    	for(int i = 0;i<N;i++)
+	    	{
+	    		for(int j = 0;j<N;j++)
+	    		{
+	    			if(result[i][j]!=0) //Until the iteration reaches unfilled values in the board
+	    			{	
+	    				if(prevOperation != operations[i][j]) //Don't check constraint for the same operation
+	    				{ 
+	    					prevOperation = operations[i][j];
+	    					if(checkConstraintNew(constraint[prevOperation],id)==0)
 		    					{
 		    						resultFlag = 0;
 		    						break;
@@ -1064,49 +1161,40 @@ public class Kenken {
 	    }
 	   public static void printBoard(int flag)
 	    {
-		   printedBoard = "";
 	    	if(flag==1)
-	    		printedBoard = "Solution:\n";
-	    	else if(flag!=2)
-	    		printedBoard = "\nPuzzle Unsolved: State - " + noOfStates;
+	    			System.out.println(/*"\n\nConstraints:\n\n" + constraints +*/ "\nSolution: State - " + noOfStates);
+	    	else
+	    		System.out.println("\nPuzzle Unsolved: State - " + noOfStates );
 	    	for(int i = 0; i < N; i++)
 	    		{
 		    		for(int j = 0; j< N; j++)
-		    			printedBoard = printedBoard + result[i][j] + "\t";
-		    		printedBoard = printedBoard + "\n"; 
+		    			System.out.print(result[i][j] + " ");
+		    		System.out.println();
 	    		}
-	    	if(flag!=2) System.out.print(printedBoard);
-	    	/*
-	    	System.out.println("Uniques: ");
+	    	
+	    	System.out.println();
 	    	for(int i = 0; i < N; i++)
     		{
 	    		for(int j = 0; j< N; j++)
 	    			System.out.print(uniques[i][j] + " ");
 	    		System.out.println();
     		}
-	    	System.out.println("Computes: ");
-	    	for(int i = 0; i < N; i++)
-    		{
-	    		for(int j = 0; j< N; j++)
-	    			System.out.print(computes[i][j] + " ");
-	    		System.out.println();
-    		}
-	    		
-	    	System.out.println("Operations: ");
+    		/*
+	    	System.out.println();
 	    	for(int i = 0; i < N; i++)
     		{
 	    		for(int j = 0; j< N; j++)
 	    			System.out.print(operations[i][j] + " ");
 	    		System.out.println();
-    		}
-    		 */
+    		}*/
+    		 
 	    }    
     }
     
 	public static void main(String[] args) throws IOException {
-		boolean writeFlag = true, production = true;
-		String path = ""; //"G:/University of Michigan/Fall 2018/EECS 592/Assignments/modified ";
-		File file = new File(path + "input.txt");
+		boolean writeFlag = false;
+		
+		File file = new File("G:/University of Michigan/Fall 2018/EECS 592/Assignments/modified input.txt");
 		Scanner scanner = new Scanner(file);
 		scanner.useDelimiter("(?=\\n\\d)");
 		
@@ -1115,29 +1203,20 @@ public class Kenken {
 		while(scanner.hasNext()) //Change this to while
 		{
 			 Puzzle latestPuzzle = new Puzzle(scanner.next().trim());
-			 contents = contents  + "\nPuzzle " + ++count + ":" + "\n";
-			 contents = contents  + "Approach 5:"+ "\n";	
 			 long startTime = System.nanoTime();
 		     latestPuzzle.solve5(false);
-		     float estimatedTime = (System.nanoTime() - startTime)/1000;
-		     if(production) 
-		    	 latestPuzzle.printBoard(2);
-		     else
-		    	 latestPuzzle.printBoard(1);
-		     contents = contents + latestPuzzle.printedBoard;
-		     contents = contents  + "States generated: " + latestPuzzle.noOfStates+ "\n";
-		     contents = contents  + "Time in ms: " + estimatedTime+ "\n";
-		     contents = contents  + "States/microseconds: " + latestPuzzle.noOfStates/estimatedTime+ "\n";
-		     if(!production) System.out.println(contents);
-		     if(writeFlag)
-				{
-					FileWriter fw = new FileWriter(path + "output.txt");
-		        	fw.write(contents);
-		        	fw.close();
-				}
+		     latestPuzzle.printBoard(1);
+	         long estimatedTime = System.nanoTime() - startTime;
+			 System.out.print("Time Spent: " + estimatedTime + "ns");
+			 
 		}
 		scanner.close();
-		
+		if(writeFlag)
+		{
+			FileWriter fw = new FileWriter("G:/University of Michigan/Fall 2018/EECS 592/Assignments/output.txt");
+        	fw.write(contents);
+        	fw.close();
+		}
 	}
 	public static void promptEnterKey(){
 		   System.out.println("Press \"ENTER\" to continue...");
